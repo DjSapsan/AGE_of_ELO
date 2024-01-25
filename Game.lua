@@ -27,17 +27,18 @@ local gaussian = function(mean, variance)                                       
 end
 
 local getCoefficient = function(p)
-  if p.games <= 20 then return 64 end
-  if p.rank <= 100 then return 16 end
-  --if player.place <= 200 then return 16 end
+  if p.games <= 20 then return 100 end
+  --if p.rank <= 100 then return 16 end -- CHECK THIS
+  --if player.place <= 200 then return 16 end -- CHECK THIS
   return 32
 end
 
-function Game.calculateELO(player1,player2)
+function Game.changeELO(player1,player2)
   local expected = 1 / (1 + 10 ^ ( ( player2.rating - player1.rating) / 400 ) )
   local K1 = getCoefficient(player1)
+  local K2 = getCoefficient(player1)
   player1.rating = player1.rating + round(K1 * (expected))
-  player2.rating = player2.rating - round(K1 * (expected))
+  player2.rating = player2.rating - round(K2 * (expected))
 end
 
 function Game.firstSession()
@@ -55,7 +56,7 @@ function Game.oneSession()
   Game.whoIsReady()
   Game.readyPlayersPlay()
   table.sort(PlayerDB.table, function(p1,p2) return p1.rating>p2.rating end)
-  
+
   local index -- splitting by ELO
   Game.stat.playersByELO50 = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} -- 0..50, 51..100, (...), 2400+
   for i = 1, #PlayerDB.table do
@@ -94,11 +95,11 @@ function Game.readyPlayersPlay()
     elseif math.abs(player1.rating - player2.rating) < 4*ELO_STEP_DIFFERENCE then
       if 0.125 > math.random() then
         Game.playMatch(player1, player2)
-      end      
+      end
     elseif math.abs(player1.rating - player2.rating) < 8*ELO_STEP_DIFFERENCE then
       if 0.0275 > math.random() then
         Game.playMatch(player1, player2)
-      end   
+      end
     end
   end
 
@@ -111,14 +112,14 @@ function Game.playMatch(player1, player2)
   local probability = 1 / (1 + 10^( ( player2.skill - player1.skill) / 400 ) ) -- probability of player1 win
 
   if probability > math.random() then
-    Game.calculateELO(player1,player2)      -- first player won
+    Game.changeELO(player1,player2)      -- first player won
     player1.wins = player1.wins + 1
     player2.losses = player2.losses + 1
     if parameters.selected and (parameters.selected==player1 or parameters.selected==player2) then
       print(Game.printResults(player1,player2,probability))
     end
   else
-    Game.calculateELO(player2,player1)      -- second player won
+    Game.changeELO(player2,player1)      -- second player won
     player2.wins = player2.wins + 1
     player1.losses = player1.losses + 1
     if parameters.selected and (parameters.selected==player1 or parameters.selected==player2) then

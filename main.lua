@@ -1,4 +1,3 @@
----@diagnostic disable: lowercase-global
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
 
 CLASS = require "middleclass"
