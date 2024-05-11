@@ -1,3 +1,6 @@
+local CLASS = require "middleclass"
+local Game = require "Game"
+
 local Graphics = CLASS("Graphics")
 
 function Graphics:initialize()
@@ -8,55 +11,73 @@ function Graphics:newHistogram(horizont, vertical)
   return canvas
 end
 
-function Graphics:updateELOHistogramCanvas(canvas, t, selected)
+function Graphics:updateELOHistogramCanvas(canvas, t, LB_ID)
   love.graphics.setCanvas(canvas)
   love.graphics.clear()
   love.graphics.setBlendMode("alpha")
 
-  love.graphics.setColor(0.5,0.5,1)
-
+  -- Colors and dimensions
+  love.graphics.setColor(0.5, 0.5, 1)
   local width, height = canvas:getDimensions()
-  local lineWidth = (width-40)/#t
 
+  -- Histogram parameters
   local maxELO = 3100
-  --for _,p in ipairs(t) do
-  --  if p.rating>maxELO then maxELO = p.rating end
-  --end
-  local lineHeight = (height-20)/maxELO
-  local percentW = math.floor(#t/10)
-  local percentH = math.floor(maxELO/50)
+  local lineHeight = (height-20) / maxELO
+  local totalPlayers = #t
 
-  for i=1,#t do
-    if i == selected.rank then
-      love.graphics.setColor(1,0,0)
-      love.graphics.setLineWidth(5)
-      love.graphics.line(width - i*lineWidth, height-20, width - i*lineWidth, height-t[i].rating*lineHeight-20)
-      love.graphics.setLineWidth(1)
-      love.graphics.setColor(0.5,0.5,1)
-    else
-      love.graphics.line(width - i*lineWidth, height-20, width - i*lineWidth, height-t[i].rating*lineHeight-20)
+  -- Determine maximum number of bars based on canvas width (subtracted by margins)
+  local maxBars = width - 40
+  local playersPerBar = math.ceil(totalPlayers / maxBars)
+
+  -- Drawing the histogram bars
+  for i = 0, maxBars - 1 do
+    local startPlayer = i * playersPerBar + 1
+    local endPlayer = math.min(startPlayer + playersPerBar - 1, totalPlayers)
+    local sumRating = 0
+    local count = 0
+
+    -- Sum up ratings for players represented by this bar
+    for j = startPlayer, endPlayer do
+      sumRating = sumRating + t[j].LB[LB_ID].rating
+      count = count + 1
     end
+
+    -- Calculate average rating if there are players to consider
+    local avgRating = count > 0 and sumRating / count or 0
+    local xPosition = width - 40 - i
+    local yPosition = height - avgRating * lineHeight - 20
+    love.graphics.line(xPosition, height-20, xPosition, yPosition)
   end
 
-  love.graphics.setColor(1,1,1)
-  for i=1,#t, percentW do
-    love.graphics.print("|"..i.." ",width - i*lineWidth,height-20)
+  -- Labels and decorations
+  love.graphics.setColor(1, 1, 1)
+  local labelCount = 10  -- Fixed number of labels
+  local labelSpacing = (maxBars - 1) / (labelCount)
+
+  -- Vertical lines at calculated intervals
+  for i = 0, labelCount do
+    local xPosition = width - 40 - (i * labelSpacing)
+    love.graphics.print("|" .. math.floor(i * labelSpacing * playersPerBar + 1), xPosition, height - 20)
   end
 
-  for i=1,maxELO, percentH do
-    love.graphics.print(i,0,height - i*lineHeight-22)
+  -- Horizontal labels at percentage intervals
+  local percentH = 100--math.floor(maxELO / 50)
+  for i = 5*percentH, maxELO, percentH do
+    love.graphics.print(i.."_", 0, height - i * lineHeight-40)
   end
 
-  love.graphics.setColor(1,1,1)
-  love.graphics.print("ELO OF EACH PLAYER",100,0,0,1.5,1.5)
+  -- ELO description
+  love.graphics.print("ELO OF EACH PLAYER \n Total players: " .. totalPlayers, 100, 0, 0, 2, 2)
 
-  love.graphics.setColor(0.5,0.5,0.5)
-  love.graphics.rectangle("line",0,0,width, height)
+  -- Drawing rectangle around the histogram
+  love.graphics.setColor(0.5, 0.5, 0.5)
+  love.graphics.rectangle("line", 0, 0, width, height)
 
+  -- Reset canvas
   love.graphics.setCanvas()
 end
 
-function Graphics:updatePlayersHistogramCanvas(canvas, t, selected)
+function Graphics:updatePlayersHistogramCanvas(canvas, t)
 
   love.graphics.setCanvas(canvas)
   love.graphics.clear()
@@ -67,24 +88,21 @@ function Graphics:updatePlayersHistogramCanvas(canvas, t, selected)
   local lineWidth = (width-40)/50 -- 50 bars
   local thinkess = lineWidth - 2
 
-  local lineHeight = (height-40)*10/#t -- amount of players
-  --local percentW = math.floor(#t/10)
-  --local percentH = math.floor(#t/50)
-  --if arg[#arg] == "-debug" then require("mobdebug").start() end
-  local amount = 0
   local max = 0
 
-  love.graphics.setColor(0.1,0.1,0.1)
   for i=1,50 do
-    amount = Game.stat.playersByELO50[i]
-    love.graphics.line(0, height-40-amount*lineHeight, width, height-40-amount*lineHeight)
+    if max < Game.stat.playersByELO50[i] then
+      max = Game.stat.playersByELO50[i]
+    end
   end
 
+  local lineHeight = (height-80)/max
+
+  local amount = 0
   love.graphics.setColor(0.5,0.5,1)                                                                             -- rectangle histogram
   for i=1,50 do
     amount = Game.stat.playersByELO50[i]
     love.graphics.rectangle("fill", i*lineWidth + 2 + 40, height-40, thinkess, -amount*lineHeight)
-    if max < Game.stat.playersByELO50[i] then max = Game.stat.playersByELO50[i] end
   end
 
   love.graphics.setColor(1,1,1)                                               -- rating
@@ -92,10 +110,11 @@ function Graphics:updatePlayersHistogramCanvas(canvas, t, selected)
     love.graphics.print((i*50).."-",i*lineWidth+41,height-2,-1.57079633)
   end
 
-  local percentH = math.floor(#t/50)
-  for i=1,50 do
-    love.graphics.print(math.floor(i*percentH/3),0,height- i*(height-40)/50 - 45)
-  end
+  -- TODO rework need correct numbers
+  -- local percentH = math.floor(#t/(max))
+  -- for i=1,50 do
+  --   love.graphics.print(i*percentH,0,height- i*(height-40)/50 - 45)
+  -- end
 
   for i=1,50 do
     if Game.stat.playersByELO50[i] > 0 then
