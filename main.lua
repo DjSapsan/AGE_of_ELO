@@ -1,11 +1,10 @@
-if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
+--if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
 
---local CLASS = require "middleclass"
 local Game = require "Game"
 local Graphics = require "Graphics"
---local DBmanager = require "PlayerDB"
-local Evo = require "evolve"
+local Fit = require "Fit"
 
+-- TODO make all local
 function love.load()
 
   --selectedName = "DjSapsan"
@@ -15,14 +14,14 @@ function love.load()
   math.randomseed(os.time())
 
   -- 199325 = Hera
-  parameters = {lastPrediction = "", run = 0,playersFromRM = true, playerDynamics = true, pause = false, draw = true, trackPlayerID = 199325}
+  parameters = {isScenario = false, getDataPoints = true,lastPrediction = "", run = 0,playersFromRM = true, playerDynamics = true, pause = false, draw = true, trackPlayerID = 199325}
 
-  graph = Graphics:new()                    -- TODO make local
+  graph = Graphics:new()
   EloGraph = graph:newHistogram(600, 600)
   PlayersGraph = graph:newHistogram(600, 600)
 
   Game.initialize()
-  --if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
+  if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
 end
 
 function love.quit()
@@ -114,6 +113,6 @@ function love.draw()
   --love.graphics.print("Sim speed: "..parameters.simSpeed,600,20)
   love.graphics.print("Leaderboard RB EW - sorted by highest Elo:", 1600,0)
   love.graphics.print(Game.topString, 1600,20)
-  love.graphics.print(os.date("%d %B",Game.currentDay),1400,26,0,4,4)
+  love.graphics.print(os.date("%d %B",Game.simIRLDay),1400,26,0,4,4)
 
 end

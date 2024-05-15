@@ -62,7 +62,7 @@ local iterateWholeLeaderBoard = function (id)--, upTo)
 	local start = 1
 	while true do
 		requestURL1 = string.format(BASE_URL, id, start)
-		requestURL2 = string.format(BASE_URL, id, start+1)
+		requestURL2 = string.format(BASE_URL, id, start+100)
 		print("Requesting: ", requestURL1)
 		print("Requesting: ", requestURL2)
 		newData1 = httpsGet(requestURL1)

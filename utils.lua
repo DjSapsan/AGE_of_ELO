@@ -27,4 +27,19 @@ utils.extractDate = function(filename)
   return 0
 end
 
+-- probably unsafe for tables with loops
+local deepCopy
+deepCopy = function(orig)
+  local copy = {}
+  for orig_key, orig_value in next, orig, nil do
+      if type(orig_value) == 'table' then
+          copy[orig_key] = deepCopy(orig_value)
+      else
+          copy[orig_key] = orig_value
+      end
+  end
+  return copy
+end
+utils.deepCopy = deepCopy
+
 return utils
