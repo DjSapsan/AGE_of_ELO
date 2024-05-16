@@ -3,3 +3,4 @@ LB_to_load*
 stats/
 GPTJson.lua
 test*
+Predictions/*

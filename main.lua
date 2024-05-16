@@ -1,8 +1,7 @@
---if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
+if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
 
 local Game = require "Game"
 local Graphics = require "Graphics"
-local Fit = require "Fit"
 
 -- TODO make all local
 function love.load()
@@ -14,14 +13,14 @@ function love.load()
   math.randomseed(os.time())
 
   -- 199325 = Hera
-  parameters = {isScenario = false, getDataPoints = true,lastPrediction = "", run = 0,playersFromRM = true, playerDynamics = true, pause = false, draw = true, trackPlayerID = 199325}
+  parameters = {savePredictions = true, isScenario = false, getDataPoints = false,lastPrediction = "", run = 0,playersFromRM = true, playerDynamics = true, pause = false, draw = true, trackPlayerID = 199325}
 
   graph = Graphics:new()
   EloGraph = graph:newHistogram(600, 600)
   PlayersGraph = graph:newHistogram(600, 600)
 
   Game.initialize()
-  if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
+  --if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
 end
 
 function love.quit()

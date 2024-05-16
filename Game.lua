@@ -3,6 +3,7 @@ local PlayerDB = require('PlayerDB')
 local Fit = require("Fit")
 local utils = require("utils")
 local Scenario = require("scenario")
+local CSV = require("ftcsv")
 
 local Game = {}
 
@@ -44,32 +45,33 @@ function Game.initialize()
   -- temp variable to detect next day
   Game.lastDay = 0
 
-  Game.moreActivityLastDays = 5 -- activates top players to become more active before the very end
+  Game.moreActivityLastDays = 7 -- activates top players to become more active before the very end
   Game.moreActivityDone = false
 
   Game.paused = false
   Game.ended = false
   Game.saved = false
 
-  if parameters.getDataPoints then Game.updateDataPointsFolder("LB_RB_EW") end
+  if parameters.getDataPoints then Game.updateDataPointsFolder("LB_RB_EW"); love.event.quit() end
 
   if PlayerDB.isBackup then
     PlayerDB.restore()
   else
     Game.loadLatestResultsFolder("LB_RB_EW")
     Game.loadLatestResultsFolder("LB_RM")
+    Game.determineAverages()  -- use cache
+    PlayerDB.determineHiddenVariables()
+    PlayerDB.localBackup()
   end
-
-  --Game.addTopPlayers(27, 3, 100)
-  Game.determineAverages()  -- use cache
 
   if parameters.isScenario then
     Scenario.set(Game)
   end
 
-  Game.evaluatePlayers()
   PlayerDB.sortLB(Game.LB_ID)
   PlayerDB.updateRanksFromLB(Game.LB_ID)
+
+  Game.ovveridePlayers()
 end
 
 local round = function(num)
@@ -142,20 +144,32 @@ function Game.updateStage()
 
 end
 
--- TODO change activity only of grinders
-function Game.changeActivity(top)
-  local LB_ID = 27 --Game.LB_ID
-  for i = 1, top or 50 do
-    local p = PlayerDB.LB[LB_ID][i]
-    if p.LB[LB_ID].lastmatchdate >= 0 then      -- if the player is original
-      p.online = 1 + math.log10((p.online+0.11)/1.11) -- gives nice curve from 0 to 1
-      p.skill = p.skill*1.01
+-- Function to update players' activity based on CSV data
+function Game.changeActivity()
+
+  local csvData = CSV.parse("grinders.csv", '\t')
+
+  local LB_ID = 27 -- Game.LB_ID
+  local playerOnlineX, p
+  for i, row in ipairs(csvData) do
+
+    playerOnlineX = tonumber(row.onlineX)
+    p = PlayerDB.table[tonumber(row.id)]
+
+    if p.LB[LB_ID].lastmatchdate >= 0 then -- if the player is original
+      p.online = p.online * playerOnlineX -- 1 + math.log10((playerOnlineX + 0.11) / 1.11) -- gives nice curve from 0 to 1
+      p.skill = p.skill * 1.01
     end
+
   end
 end
 
+function Game.ovveridePlayers()
+
+end
+
 function Game.savePredictions()
-  if Game.saved then return end
+  if not parameters.savePredictions or Game.saved then return end
   Game.saved = true
 
   local allResults = Game.printCSV(0, Game.LB_ID, false, "highestrating")
@@ -163,8 +177,7 @@ function Game.savePredictions()
   parameters.lastPrediction = Game.topString
 
   --if parameters.run % 2 ~= 0 then return end
-  if true then return end
-  local f, err = io.open("Ladder/Ladder"..time..".csv", "w")
+  local f, err = io.open("Predictions/Ladder"..time..".csv", "w")
   if not f then print(err) return end
   f:write(allResults)
   f:close()
@@ -238,6 +251,8 @@ function Game.restart()
 end
 
 function Game.reset()
+  if PlayerDB.isBackup then return end
+
   package.loaded["PlayerDB"] = nil
   collectgarbage()
   PlayerDB = require('PlayerDB')
@@ -368,10 +383,10 @@ function Game.updateDataPointsFolder(folder)
   end
 end
 
-function Game.evaluatePlayers()
-  PlayerDB.determineHiddenVariables()
-  PlayerDB.sortLB(Game.LB_ID)
-end
+-- function Game.evaluatePlayers()
+--   PlayerDB.determineHiddenVariables()
+--   PlayerDB.sortLB(Game.LB_ID)
+-- end
 
 function Game.movePlayersFromOtherLB(to_ID, from_ID)
   if #PlayerDB.LB[from_ID] == 0 then return end

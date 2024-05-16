@@ -17,6 +17,7 @@ PlayerDB.LB = {[3] = {}, [4] = {}, [13] = {}, [27] = {}}
 PlayerDB._LB = {[3] = {}, [4] = {}, [13] = {}, [27] = {}}
 PlayerDB.stats = {}
 PlayerDB.stats.mostGames = nil-- = {[3] = 0, [27] = 0}
+PlayerDB._stats = {}
 
 -- data points across IRL data loading
 -- ONLY FOR the active ladder
@@ -32,6 +33,7 @@ end
 PlayerDB.localBackup = function ()
     PlayerDB._table = utils.deepCopy(PlayerDB.table)
     PlayerDB._LB = utils.deepCopy(PlayerDB.LB)
+    PlayerDB._stats = utils.deepCopy(PlayerDB.stats)
     PlayerDB.isBackup = true
 end
 
