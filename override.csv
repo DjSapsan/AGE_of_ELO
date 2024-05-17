@@ -1,2 +1,4 @@
-id, name, skill, online
-19578599, _Aston_Martin_, 0, 0	#smurf
+id	name	skill	online	comment
+19578599	_Aston_Martin_	0	0	smurf
+196240	GL.TheViper	2810	0.15	-
+197388	GL.TaToH	2775	0.2	-

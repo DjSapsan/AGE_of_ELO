@@ -1,9 +1,11 @@
 --local json = require('dkjson')
+local parameters = require("parameters")
 local PlayerDB = require('PlayerDB')
 local Fit = require("Fit")
 local utils = require("utils")
 local Scenario = require("scenario")
 local CSV = require("ftcsv")
+local Graphics = require("Graphics")
 
 local Game = {}
 
@@ -45,7 +47,7 @@ function Game.initialize()
   -- temp variable to detect next day
   Game.lastDay = 0
 
-  Game.moreActivityLastDays = 7 -- activates top players to become more active before the very end
+  Game.moreActivityLastDays = 0.9 -- % activates top players to become more active before the very end
   Game.moreActivityDone = false
 
   Game.paused = false
@@ -71,7 +73,7 @@ function Game.initialize()
   PlayerDB.sortLB(Game.LB_ID)
   PlayerDB.updateRanksFromLB(Game.LB_ID)
 
-  Game.ovveridePlayers()
+  Game.overridePlayers()
 end
 
 local round = function(num)
@@ -156,27 +158,38 @@ function Game.changeActivity()
     playerOnlineX = tonumber(row.onlineX)
     p = PlayerDB.table[tonumber(row.id)]
 
-    if p.LB[LB_ID].lastmatchdate >= 0 then -- if the player is original
-      p.online = p.online * playerOnlineX -- 1 + math.log10((playerOnlineX + 0.11) / 1.11) -- gives nice curve from 0 to 1
-      p.skill = p.skill * 1.01
-    end
+    p.online = p.online * playerOnlineX -- 1 + math.log10((playerOnlineX + 0.11) / 1.11) -- gives nice curve from 0 to 1
+    p.skill = p.skill * 1.01
 
   end
 end
 
-function Game.ovveridePlayers()
+function Game.overridePlayers()
+  local csvData = CSV.parse("override.csv", '\t')
 
+  local id, skill, online, p
+
+  for i, row in ipairs(csvData) do
+    id = tonumber(tonumber(row.id))
+    skill = tonumber(row.skill)
+    online = tonumber(row.online)
+
+    p = PlayerDB.table[id]
+
+    if p then
+      p.skill = skill
+      p.online = online * online
+    end
+  end
 end
 
 function Game.savePredictions()
   if not parameters.savePredictions or Game.saved then return end
   Game.saved = true
-
   local allResults = Game.printCSV(0, Game.LB_ID, false, "highestrating")
-  local time = os.date("%Y-%m-%d-%X")
+  local time = os.date("%Y-%m-%d-%H-%M-%S")
   parameters.lastPrediction = Game.topString
 
-  --if parameters.run % 2 ~= 0 then return end
   local f, err = io.open("Predictions/Ladder"..time..".csv", "w")
   if not f then print(err) return end
   f:write(allResults)
@@ -271,8 +284,8 @@ function Game.gameStep()
   Game.oneSession()
 
   if parameters.draw then
-    graph:updateELOHistogramCanvas(EloGraph, PlayerDB.LB[Game.LB_ID], Game.LB_ID)
-    graph:updatePlayersHistogramCanvas(PlayersGraph, PlayerDB.LB[Game.LB_ID])
+    Graphics.updateELOHistogramCanvas(EloGraph, PlayerDB.LB[Game.LB_ID], Game.LB_ID)
+    Graphics.updatePlayersHistogramCanvas(PlayersGraph, PlayerDB.LB[Game.LB_ID])
   end
 
   Game.stat.step = Game.stat.step + 1
@@ -431,7 +444,7 @@ function Game.printTop(topN, LB_ID, doSort, sortBy)
   if doSort then
     PlayerDB.sortLB(LB_ID, sortBy)
   end
-  local topList = {}
+  local nextLine = {}
   local line = {}
   local games = 0
   for i = 1, topN or 10 do
@@ -443,22 +456,22 @@ function Game.printTop(topN, LB_ID, doSort, sortBy)
     line[4] = "Played: ".. games
     line[5] = string.format("(%i%%)",100 * p.LB[LB_ID].wins / games)
 
-    topList[i] = table.concat(line, "\t")
+    nextLine[i] = table.concat(line, "\t")
   end
-  local result = table.concat(topList,"\n",1, (topN or 10) )
+  local result = table.concat(nextLine,"\n",1, (topN or 10) )
   return result
 end
 
 function Game.printCSV(topN, LB_ID, doSort, sortBy)
   local LB_ID = LB_ID or Game.LB_ID
-  if (not topN or topN == 0) then topN = #PlayerDB.LB[LB_ID]-1 end
+  if (not topN or topN == 0) then topN = #PlayerDB.LB[LB_ID] end
   if doSort then
     PlayerDB.sortLB(LB_ID, sortBy)
   end
-  local topList = {[1]="rank, name, highest_elo, games, winrate"}
+  local nextLine = {[1]="rank\tname\thighest_elo\tgames\twinrate"}
   local line = {}
   local games = 0
-  for i = 2, topN+1 or 11 do
+  for i = 1, topN or 11 do
     local p = PlayerDB.LB[LB_ID][i]
     games = p.LB[LB_ID].wins + p.LB[LB_ID].losses
     line[1] = i
@@ -467,9 +480,9 @@ function Game.printCSV(topN, LB_ID, doSort, sortBy)
     line[4] = games
     line[5] = p.LB[LB_ID].wins / games
 
-    topList[i] = table.concat(line, ",")
+    nextLine[i] = table.concat(line, "\t")
   end
-  local result = table.concat(topList,"\n",1, (topN or 10) )
+  local result = table.concat(nextLine,"\n",1, (topN or 10) )
   return result
 end
 

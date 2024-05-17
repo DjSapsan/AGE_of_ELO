@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Check the operating system
+OS="$(uname)"
+PROJECT_DIR="$(dirname "$0")"
+
+if [ "$OS" = "Linux" ]; then
+    # On Linux
+    if command -v love >/dev/null 2>&1; then
+        love "$PROJECT_DIR"
+    else
+        echo "Love2D is not installed. Please install Love2D to run the project."
+    fi
+elif [ "$OS" = "Darwin" ]; then
+    # On macOS
+    if command -v love >/dev/null 2>&1; then
+        love "$PROJECT_DIR"
+    else
+        echo "Love2D is not installed. Please install Love2D to run the project."
+    fi
+elif [ "$OS" = "MINGW64_NT" ] || [ "$OS" = "MINGW32_NT" ]; then
+    # On Windows with Git Bash or similar
+    if command -v love >/dev/null 2>&1; then
+        love "$PROJECT_DIR"
+    else
+        echo "Love2D is not installed. Please install Love2D to run the project."
+    fi
+else
+    echo "Unsupported OS: $OS"
+    exit 1
+fi

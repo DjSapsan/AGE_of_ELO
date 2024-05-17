@@ -1,8 +1,14 @@
---local json = require("dkjson")
-local jsonFull = require("GPTJson")
-local json = jsonFull.use_lpeg()
-
 local utils = require("utils")
+
+local json
+local jsonGPT = utils.want("GPTJson")
+if not jsonGPT then
+    json = require("dkjson")
+else
+    json = jsonGPT.use_lpeg()   -- should be a bit faster, but not publishing
+end
+
+local parameters = require("parameters")
 
 local PlayerDB = {}
 
@@ -235,6 +241,11 @@ PlayerDB.overridePlayerValues = function ()
 end
 ]]
 
+-- clamp to avoid infinities
+local function infClamp(value)
+	return math.max(0.0001, math.min(0.9999, value))
+end
+
 local ELO_FACTOR = 200
 -- determines player's skill and online frequency based on player's history
 --
@@ -254,7 +265,7 @@ PlayerDB.determineHiddenVariables = function ()
         if not player.LB[27] then LB_ID_active = 3; factor = 0.9 end     -- CAUTION! some player may not have RM or RB EW rank
 
         local winrateMain = player.LB[LB_ID_main].wins / getNumberOfGames(player, LB_ID_main)
-        player.skill  = player.LB[LB_ID_main].highestrating + ELO_FACTOR * math.log(winrateMain/(1-winrateMain),10)
+        player.skill  = player.LB[LB_ID_main].highestrating + ELO_FACTOR * math.log( infClamp(winrateMain/(1-winrateMain)),10)
 
         player.online = factor * (getNumberOfGames(player, LB_ID_active) / PlayerDB.stats.mostGames[LB_ID_active])
     end

@@ -1,23 +1,30 @@
+--[[
+  Author: DjSapsan
+  MIT license
+
+  It requires Love2D framework to run (https://love2d.org/)
+
+  Use START file (works both in Linux / windows) to start the simulation.
+  In an IDE please run project from the current directory, otherwise results will not be saved here.
+
+  Latest changes are not tested for precision!
+]]
+
 if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
 
-local Game = require "Game"
-local Graphics = require "Graphics"
+local utils = require("utils")
+local parameters = require("parameters")
+local Game = require("Game")
+local Graphics = require("Graphics")
 
--- TODO make all local
 function love.load()
 
-  --selectedName = "DjSapsan"
-
   love.window.setMode(1920, 768, {resizable=true, vsync=false, minwidth=400, minheight=300})
-  --love.filesystem.setIdentity("AgeOfElo") -- folder to save files
   math.randomseed(os.time())
 
-  -- 199325 = Hera
-  parameters = {savePredictions = true, isScenario = false, getDataPoints = false,lastPrediction = "", run = 0,playersFromRM = true, playerDynamics = true, pause = false, draw = true, trackPlayerID = 199325}
-
-  graph = Graphics:new()
-  EloGraph = graph:newHistogram(600, 600)
-  PlayersGraph = graph:newHistogram(600, 600)
+  Graphics.initialize(Game)
+  EloGraph = Graphics.newHistogram(600, 600)
+  PlayersGraph = Graphics.newHistogram(600, 600)
 
   Game.initialize()
   --if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then require("lldebugger").start() end
@@ -95,8 +102,8 @@ function love.draw()
 
   local numberOfGamesPrint = string.format("Number of games played: %i / %i [%i%%]", Game.stat.totalGames, Game.gamesLeftToPlay, 100 * Game.stat.totalGames/Game.gamesLeftToPlay)
   love.graphics.setColor(1,1,1,1)
-  graph:drawCanvas(EloGraph,10,50,1,1)
-  graph:drawCanvas(PlayersGraph,10,660,1,1)
+  Graphics.drawCanvas(EloGraph,10,50,1,1)
+  Graphics.drawCanvas(PlayersGraph,10,660,1,1)
   love.graphics.setColor(1,1,1,1)
 
   --local topPlayer = Game.playerDB.table[1]

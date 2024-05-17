@@ -12,7 +12,7 @@ local LEADERBOARD = {}
 -- leaderboard ID:
 -- 3 = 1v1 RM
 -- 27 = RB EW
-local LB_ID = 3
+local LB_ID = 27
 
 -- Utility function to make HTTPS GET requests
 local function httpsGet(url)

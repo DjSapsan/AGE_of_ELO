@@ -1,17 +1,16 @@
-local CLASS = require "middleclass"
-local Game = require "Game"
+local parameters = require("parameters")
 
-local Graphics = CLASS("Graphics")
-
-function Graphics:initialize()
+local Game
+local function initialize (game)
+  Game = game
 end
 
-function Graphics:newHistogram(horizont, vertical)
+local function newHistogram(horizont, vertical)
   local canvas = love.graphics.newCanvas(horizont, vertical)
   return canvas
 end
 
-function Graphics:updateELOHistogramCanvas(canvas, t, LB_ID)
+local function updateELOHistogramCanvas(canvas, t, LB_ID)
   love.graphics.setCanvas(canvas)
   love.graphics.clear()
   love.graphics.setBlendMode("alpha")
@@ -77,19 +76,16 @@ function Graphics:updateELOHistogramCanvas(canvas, t, LB_ID)
   love.graphics.setCanvas()
 end
 
-function Graphics:updatePlayersHistogramCanvas(canvas, t)
-
+local function updatePlayersHistogramCanvas(canvas, t)
   love.graphics.setCanvas(canvas)
   love.graphics.clear()
   love.graphics.setBlendMode("alpha")
 
   local width, height = canvas:getDimensions()
-
   local lineWidth = (width-40)/50 -- 50 bars
-  local thinkess = lineWidth - 2
+  local thickness = lineWidth - 2
 
   local max = 0
-
   for i=1,50 do
     if max < Game.stat.playersByELO50[i] then
       max = Game.stat.playersByELO50[i]
@@ -97,17 +93,16 @@ function Graphics:updatePlayersHistogramCanvas(canvas, t)
   end
 
   local lineHeight = (height-80)/max
-
   local amount = 0
-  love.graphics.setColor(0.5,0.5,1)                                                                             -- rectangle histogram
+  love.graphics.setColor(0.5,0.5,1) -- rectangle histogram
   for i=1,50 do
     amount = Game.stat.playersByELO50[i]
-    love.graphics.rectangle("fill", i*lineWidth + 2 + 40, height-40, thinkess, -amount*lineHeight)
+    love.graphics.rectangle("fill", i*lineWidth + 2 + 40, height-40, thickness, -amount*lineHeight)
   end
 
-  love.graphics.setColor(1,1,1)                                               -- rating
+  love.graphics.setColor(1,1,1) -- rating
   for i=0,49 do
-    love.graphics.print((i*50).."-",i*lineWidth+41,height-2,-1.57079633)
+    love.graphics.print((i*50).."-", i*lineWidth+41, height-2, -1.57079633)
   end
 
   -- TODO rework need correct numbers
@@ -118,21 +113,27 @@ function Graphics:updatePlayersHistogramCanvas(canvas, t)
 
   for i=1,50 do
     if Game.stat.playersByELO50[i] > 0 then
-      love.graphics.print(Game.stat.playersByELO50[i],i*lineWidth+41,height-50,-1.57079633)
+      love.graphics.print(Game.stat.playersByELO50[i], i*lineWidth+41, height-50, -1.57079633)
     end
   end
 
   love.graphics.setColor(1,1,1)
-  love.graphics.print("AMOUNT OF PLAYERS WITH ELO",100,0,0,1.5,1.5)
+  love.graphics.print("AMOUNT OF PLAYERS WITH ELO", 100, 0, 0, 1.5, 1.5)
 
   love.graphics.setColor(0.5,0.5,0.5)
-  love.graphics.rectangle("line",0,0,width, height)
+  love.graphics.rectangle("line", 0, 0, width, height)
 
   love.graphics.setCanvas()
 end
 
-function Graphics:drawCanvas(canvas,x,y,scaleX,scaleY)
-  love.graphics.draw(canvas,x or 0,y or 0,0,scaleX or 1,scaleY or 1)
+local function drawCanvas(canvas, x, y, scaleX, scaleY)
+  love.graphics.draw(canvas, x or 0, y or 0, 0, scaleX or 1, scaleY or 1)
 end
 
-return Graphics
+return {
+  newHistogram = newHistogram,
+  updateELOHistogramCanvas = updateELOHistogramCanvas,
+  updatePlayersHistogramCanvas = updatePlayersHistogramCanvas,
+  drawCanvas = drawCanvas,
+  initialize = initialize
+}

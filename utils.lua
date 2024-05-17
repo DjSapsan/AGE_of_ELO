@@ -42,4 +42,14 @@ deepCopy = function(orig)
 end
 utils.deepCopy = deepCopy
 
+local want
+want = function (name)
+  local out; if xpcall(
+      function()  out = require(name) end,
+      function(e) out = e end)
+  then return out          -- success
+  else return nil, out end -- error
+end
+utils.want = want
+
 return utils
