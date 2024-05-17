@@ -1,4 +1,5 @@
 AoE 2 DE ladder simulator.
+(the description is the old version)
 
 ![image](https://github.com/DjSapsan/AGE_of_ELO/assets/12209464/7793a1c2-c714-46c3-bf7c-b74c056cf731)
 
