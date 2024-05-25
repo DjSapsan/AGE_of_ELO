@@ -10,7 +10,7 @@ Fit.params = {
 local E = math.exp(1)
 
 local newPlayersFunc = function (d)
-	return 1734 * math.log(d+2, E) - 2030
+	return 1726 * math.log(d+2, E) - 2030
 end
 
 -- new players at the specified IRL day

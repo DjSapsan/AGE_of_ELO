@@ -468,7 +468,7 @@ function Game.printCSV(topN, LB_ID, doSort, sortBy)
   if doSort then
     PlayerDB.sortLB(LB_ID, sortBy)
   end
-  local nextLine = {[1]="rank\tname\thighest_elo\tgames\twinrate"}
+  local nextLine = {[0]="rank\tname\thighest_elo\tgames\twinrate"}
   local line = {}
   local games = 0
   for i = 1, topN or 11 do

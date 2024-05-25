@@ -11,24 +11,25 @@ all_data = []
 
 # Load all CSV files
 for file in glob.glob("*.csv"):
-    df = pd.read_csv(file,on_bad_lines='skip')
+    df = pd.read_csv(file,header=None, delimiter = '\t',on_bad_lines='skip')
     all_data.append(df)
 
 # Concatenate all dataframes into one
-combined_data = pd.concat(all_data, ignore_index=True)
-
+combined_data = pd.concat(all_data, ignore_index=False)
+print("Debug: First few rows of combined data")
+print(combined_data.head())
 # Initialize dictionary to store player data
 player_data = {}
 
 # Extract player names and their statistics
 for index, row in combined_data.iterrows():
-    name = row['name']
+    name = row.iloc[1]
     if name not in player_data:
         player_data[name] = {'positions': [], 'elo': [], 'games': [], 'winrate': []}
-    player_data[name]['positions'].append(row['rank'])
-    player_data[name]['elo'].append(row['highest_elo'])
-    player_data[name]['games'].append(row['games'])
-    player_data[name]['winrate'].append(row['winrate'])
+    player_data[name]['positions'].append(int(row.iloc[0]))
+    player_data[name]['elo'].append(int(row.iloc[2]))
+    player_data[name]['games'].append(int(row.iloc[3]))
+    player_data[name]['winrate'].append(float(row.iloc[4]))
 
 # Calculate averages for position, Elo, games, and win rate
 for player, metrics in player_data.items():
