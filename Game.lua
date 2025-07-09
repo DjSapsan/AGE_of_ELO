@@ -202,7 +202,7 @@ function Game.changeELO(player1, player2)
   local expectedWin = 1 / (1 + 10 ^ ( ( player2.LB[LB_ID].rating - player1.LB[LB_ID].rating) / 400 ) )
   --local expectedSkill = 1 / (1 + 10 ^ ( ( player2.skill - player1.skill) / 400 ) )  -- to show win probablity
   local K1 = getCoefficient(player1)
-  local K2 = getCoefficient(player1)
+  local K2 = getCoefficient(player2)
   local changeP1 = round(K1 * (1-expectedWin))
   local changeP2 = round(K2 * (1-expectedWin))
   player1.LB[LB_ID].rating = player1.LB[LB_ID].rating + changeP1
