@@ -15,7 +15,7 @@ function Game.initialize()
 
   Game.playerDB = PlayerDB
 
-  Game.LB_ID = 27
+  Game.LB_ID = 3
   PlayerDB.activeLB = Game.LB_ID
 
   Game.readyList = {}
