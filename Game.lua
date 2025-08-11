@@ -30,26 +30,6 @@ function Game.initialize()
     playersByELO50 = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} -- 0..50, 51..100, (...), 2400+
   }
 
-  Game.IRLdayStartAt = os.time()
-
-  -- set the last day IRL before where the simulation ends and restarts
-  Game.IRLdaysRamaining = os.difftime(os.time({year = 2024, month = 7, day = 28}),os.time()) / (60 * 60 * 24) --until 28th of july
-
-  -- IRL days passed since the specific date
-  Game.IRLdaysPassed = os.difftime(os.time(),os.time({year = 2024, month = 5, day = 1})) / (60 * 60 * 24)
-
-  -- IRL day in the simulation
-  Game.simIRLDay = 0
-
-  -- days passed from the start of the simulation
-  Game.indexDay = 0
-
-  -- temp variable to detect next day
-  Game.lastDay = 0
-
-  Game.moreActivityLastDays = 0.0 -- % activates top players to become more active before the very end
-  Game.moreActivityDone = false
-
   Game.paused = false
   Game.ended = false
   Game.saved = false
@@ -61,9 +41,8 @@ function Game.initialize()
   else
     Game.loadLatestResultsFolder("LB_RB_EW")
     Game.loadLatestResultsFolder("LB_RM")
-    Game.determineAverages()  -- use cache
     PlayerDB.determineHiddenVariables()
-    --PlayerDB.localBackup()
+    PlayerDB.localBackup()
   end
 
   if parameters.isScenario then
@@ -130,37 +109,8 @@ function Game.amountOfPlayers(LB_ID)
 end
 
 function Game.updateStage()
-
-  if Game.stat.totalGames > Game.gamesLeftToPlay then
-    Game.ended = true
-    Game.paused = true
-    Game.savePredictions()
-  end
-
-  if not Game.moreActivityDone and Game.stat.totalGames / Game.gamesLeftToPlay > Game.moreActivityLastDays then
-    --Game.changeActivity()
-    Game.moreActivityDone = true
-  end
-
-  Game.checkNextDay()
-
-end
-
--- Function to update players' activity based on CSV data
-function Game.changeActivity()
-
-  local csvData = CSV.parse("grinders.csv", '\t')
-
-  local LB_ID = 27 -- Game.LB_ID
-  local playerOnlineX, p
-  for i, row in ipairs(csvData) do
-
-    playerOnlineX = tonumber(row.onlineX)
-    p = PlayerDB.table[tonumber(row.id)]
-
-    p.online = p.online * 1.01-- playerOnlineX -- 1 + math.log10((playerOnlineX + 0.11) / 1.11) -- gives nice curve from 0 to 1
-    p.skill = p.skill * 1.01
-
+  if parameters.isScenario then
+    Scenario.updateStage(Game)
   end
 end
 
@@ -291,29 +241,6 @@ function Game.gameStep()
   Game.stat.step = Game.stat.step + 1
 end
 
-function Game.checkNextDay()
-  local dayPassed = false
-
-  local tDate = os.date("*t",Game.updateGameDay())
-  local bigDay = tDate.year * 10000 * tDate.month * 100 + tDate.day -- trick to always count up
-
-  if Game.lastDay == 0 then
-    Game.lastDay = bigDay -- skip first iteration
-    return
-  end
-
-  if bigDay > Game.lastDay then
-    dayPassed = true
-    Game.lastDay = bigDay
-    Game.indexDay = Game.indexDay + 1
-  end
-
-  if dayPassed and parameters.playerDynamics then
-    PlayerDB.updateLeavers(1 / Fit.params.leaversFactor, Game.LB_ID)
-    Game.movePlayersFromOtherLB(27, 3)  -- issue - all players move suddenly in 1 day
-  end
-
-end
 
 function Game.readyPlayersPlay()
   local LB_ID = Game.LB_ID
@@ -351,24 +278,13 @@ function Game.readyPlayersPlay()
           Game.playMatch(player1, match.player)
           alreadyMatched[i] = true
           alreadyMatched[match.index] = true
-          if Game.stat.totalGames > Game.gamesLeftToPlay then return end
+          if Game.gamesLeftToPlay and Game.stat.totalGames > Game.gamesLeftToPlay then return end
           break -- Match found, exit the loop
         end
       end
     end
   end
 
-end
-
-function Game.determineAverages()
-  local totalGames = 0
-  local LB_ID = Game.LB_ID
-  for rank, player in pairs(PlayerDB.LB[LB_ID]) do
-    totalGames = totalGames + player.LB[LB_ID].wins + player.LB[LB_ID].losses
-  end
-  --local averagePerDayPerPlayer = totalGames / (Game.IRLdaysPassed * #PlayerDB.LB[LB_ID])
-  Game.averagePerDayPerPlayer = Fit.averageGamesAt(Game.indexDay) --averagePerDayPerPlayer
-  Game.gamesLeftToPlay = Game.averagePerDayPerPlayer * #PlayerDB.LB[LB_ID] * Game.IRLdaysRamaining
 end
 
 function Game.loadLatestResultsFolder(folder)
@@ -400,29 +316,6 @@ end
 --   PlayerDB.determineHiddenVariables()
 --   PlayerDB.sortLB(Game.LB_ID)
 -- end
-
-function Game.movePlayersFromOtherLB(to_ID, from_ID)
-  if #PlayerDB.LB[from_ID] == 0 then return end
-  local overkill = 1.01 -- overestimate new players to account for some "newcomers" that are already in the target lobby
-  local amount = Fit.newPlayersAt(os.date("*t",Game.simIRLDay).day) * overkill
-  local newComer
-  local moved = 0
-  local topPercentFrom = 0.1  -- move part of the ladder
-  local topPercentTo = 1
-
-  for i = 1, amount do
-    local index = math.floor(math.random(#PlayerDB.LB[from_ID] * topPercentFrom, #PlayerDB.LB[from_ID] * topPercentTo))
-
-    newComer = PlayerDB.LB[from_ID][index]
-    if not newComer.LB[to_ID] then         -- skip existing
-      moved = moved + 1
-      PlayerDB.resetPlayerInLB(newComer, to_ID)
-      table.insert(PlayerDB.LB[to_ID],newComer)
-    end
-  end
-  PlayerDB.sortLB(to_ID)
-  Game.updateRemainingGames(moved)
-end
 
 function Game.addTopPlayers(to_ID, from_ID, topN)
   local newComer
@@ -484,17 +377,6 @@ function Game.printCSV(topN, LB_ID, doSort, sortBy)
   end
   local result = table.concat(nextLine,"\n",1, (topN or 10) )
   return result
-end
-
-function Game.updateRemainingGames(newPlayers)
-  Game.gamesLeftToPlay = Game.gamesLeftToPlay + Game.averagePerDayPerPlayer * newPlayers
-end
-
-function Game.updateGameDay()
-  local dayPercent = Game.IRLdaysRamaining * Game.stat.totalGames / Game.gamesLeftToPlay
-  local day = Game.IRLdayStartAt + (dayPercent * 60 * 60 * 24)
-  Game.simIRLDay = day
-  return day
 end
 
 return Game
