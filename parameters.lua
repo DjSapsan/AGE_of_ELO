@@ -4,11 +4,11 @@ isScenario = false,
 getDataPoints = false,
 lastPrediction = "",
 run = 0,
-playersFromRM = true,
-playerDynamics = true,
+playersFromRM = false,
+playerDynamics = false,
 pause = false,
 draw = true,
-trackPlayerID = 199325,
+trackPlayerID = 506898,
 }
 
 return parameters
