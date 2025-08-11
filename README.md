@@ -12,7 +12,7 @@ AoE II: DE ladder simulator. Predicts rank, Elo, and likely matchups using real 
 
 ## Examples
 
-1. **Predict your rank, ELO and even potential opponents and results against them.You can change your skill and see where and against whom you end up.**
+1. **Predict your rank, ELO and even potential opponents and results against them. You can change your skill and see where and against whom you end up.**
 
   ![img](https://github.com/DjSapsan/AGE_of_ELO/assets/12209464/3c259f8b-f184-4d59-acaa-ff2a36173d59)
   
@@ -59,11 +59,8 @@ Actual ladder (~ December 2019)
    lua requestAllLeaderboard.lua
    ```
    Saves snapshots to folders LB_RM or LB_RB_EW (old Redbull ladder), you can modify ladder IDs for other ladders.
-3. Launch:
-   ```bash
-   ./START
-   ```
-or
+3. Launch "START" on any system.
+    or use Love2D laucher from the CMD/terminal
    ```bash
    love .
    ```
