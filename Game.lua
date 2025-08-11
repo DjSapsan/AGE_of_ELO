@@ -47,7 +47,7 @@ function Game.initialize()
   -- temp variable to detect next day
   Game.lastDay = 0
 
-  Game.moreActivityLastDays = 0.9 -- % activates top players to become more active before the very end
+  Game.moreActivityLastDays = 0.0 -- % activates top players to become more active before the very end
   Game.moreActivityDone = false
 
   Game.paused = false
@@ -56,14 +56,14 @@ function Game.initialize()
 
   if parameters.getDataPoints then Game.updateDataPointsFolder("LB_RB_EW"); love.event.quit() end
 
-  if PlayerDB.isBackup then
+  if false and PlayerDB.isBackup then
     PlayerDB.restore()
   else
     Game.loadLatestResultsFolder("LB_RB_EW")
     Game.loadLatestResultsFolder("LB_RM")
     Game.determineAverages()  -- use cache
     PlayerDB.determineHiddenVariables()
-    PlayerDB.localBackup()
+    --PlayerDB.localBackup()
   end
 
   if parameters.isScenario then
@@ -138,7 +138,7 @@ function Game.updateStage()
   end
 
   if not Game.moreActivityDone and Game.stat.totalGames / Game.gamesLeftToPlay > Game.moreActivityLastDays then
-    Game.changeActivity()
+    --Game.changeActivity()
     Game.moreActivityDone = true
   end
 
@@ -158,7 +158,7 @@ function Game.changeActivity()
     playerOnlineX = tonumber(row.onlineX)
     p = PlayerDB.table[tonumber(row.id)]
 
-    p.online = p.online * playerOnlineX -- 1 + math.log10((playerOnlineX + 0.11) / 1.11) -- gives nice curve from 0 to 1
+    p.online = p.online * 1.01-- playerOnlineX -- 1 + math.log10((playerOnlineX + 0.11) / 1.11) -- gives nice curve from 0 to 1
     p.skill = p.skill * 1.01
 
   end
@@ -200,7 +200,7 @@ end
 function Game.changeELO(player1, player2)
   local LB_ID = Game.LB_ID
   local expectedWin = 1 / (1 + 10 ^ ( ( player2.LB[LB_ID].rating - player1.LB[LB_ID].rating) / 400 ) )
-  --local expectedSkill = 1 / (1 + 10 ^ ( ( player2.skill - player1.skill) / 400 ) )  -- to show win probablity
+  local expectedSkill = 1 / (1 + 10 ^ ( ( player2.skill - player1.skill) / 400 ) )  -- to show win probablity
   local K1 = getCoefficient(player1)
   local K2 = getCoefficient(player1)
   local changeP1 = round(K1 * (1-expectedWin))
@@ -218,13 +218,13 @@ function Game.changeELO(player1, player2)
   player1.LB[LB_ID].streak = player1.LB[LB_ID].streak + 1
   player2.LB[LB_ID].streak = 0
 
-  --[[if parameters.trackPlayerID == player1.id then
-  --print(string.format("%s won vs %s ( %i %% to win ) +%i", player1.alias, player2.alias, changeP1))-- 100*expectedSkill, changeP1))
-  print(string.format("%s won vs %s\t+%i", player1.alias, player2.alias, changeP1))-- 100*expectedSkill, changeP1))
+  if parameters.trackPlayerID == player1.id then
+  print(string.format("%s won vs %s ( %i %% to win ) +%i", player1.alias, player2.alias, 100*expectedSkill, changeP1))
+  --print(string.format("%s won vs %s\t+%i", player1.alias, player2.alias, 100*expectedSkill, changeP1))
 elseif parameters.trackPlayerID == player2.id then
-  --print(string.format("%s lost vs %s ( %i %% to win ) -%i", player2.alias, player1.alias, changeP2))--100-100*expectedSkill, changeP2))
-  print(string.format("%s lost vs %s\t-%i", player2.alias, player1.alias, changeP2))--100-100*expectedSkill, changeP2))
-end]]
+  print(string.format("%s lost vs %s ( %i %% to win ) -%i", player2.alias, player1.alias, 100-100*expectedSkill, changeP2))
+  --print(string.format("%s lost vs %s\t-%i", player2.alias, player1.alias, 100-100*expectedSkill, changeP2))
+end
 end
 
 -- changing the constant means scaling the probability to win.

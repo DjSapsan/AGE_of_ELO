@@ -219,27 +219,6 @@ PlayerDB.playerDeath = function (chance,LB_ID)
         end
     end
 end
---[[
-PlayerDB.overridePlayerValues = function ()
-    local f = csv.open("manualAdjust.csv")
-    if not f then print("Error: file not found"); return; end
-
-    local skill, games, online
-    for fields in f:lines() do
-        local player = PlayerDB.findPlayer("name", fields[1])
-        if player then
-            skill = tonumber(fields[2])
-            games = tonumber(fields[3])
-            online = tonumber(fields[4])
-            if skill and skill > 0 then player.skill = skill end
-            if games and games > 0 then player.games = games end
-            if online and online > 0 then player.online = player.online*online end
-            print("Overriding " .. player.name .. " skill to " .. player.skill .. " games to " .. player.games .. " online to " .. player.online)
-        end
-    end
-    f:close()
-end
-]]
 
 -- clamp to avoid infinities
 local function infClamp(value)

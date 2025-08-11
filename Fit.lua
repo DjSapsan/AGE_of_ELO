@@ -3,7 +3,7 @@
 Fit = {}
 
 Fit.params = {
-	winProbFactor = 0.9,
+	winProbFactor = 1,
 	leaversFactor = 1000,
 }
 
@@ -21,7 +21,7 @@ end
 -- WRONG, but linearly close to 2 ... 2.5
 Fit.averageGamesAt = function (day)
 	--return day * 2.32 + 15.7
-	return 2
+	return 15
 end
 
 return Fit

@@ -1,6 +1,5 @@
 .vscode/
-LB_to_load*
-stats/
+LB_*/*
 GPTJson.lua
 test*
 Predictions/*.csv
