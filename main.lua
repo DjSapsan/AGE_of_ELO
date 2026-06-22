@@ -83,20 +83,22 @@ function love.update(dt)
   end
 end
 
-local info = [[
-  Simulation of the Red Bull Empire Wars ladder
--------------------------------------------------------
-Initiated by up-to-date real ladder (combined RB and RM)
-After loading initial data
-   all players are evaluated for skill and activity values.
-Then, in the simulation, players are matched and play.
-Who wins or loses is based on the skills of the matched players.
-After each match, Elo and other stats are updated.
-Players are more likely to match if their rank is similar
-   and they "joined" the queue at the same time.
-Each day I'm loading new data
-   so it will become more and more accurate toward the end.
-]]
+-- local info = [[
+--   Simulation of the Red Bull Empire Wars ladder
+-- -------------------------------------------------------
+-- Initiated by up-to-date real ladder (combined RB and RM)
+-- After loading initial data
+--    all players are evaluated for skill and activity values.
+-- Then, in the simulation, players are matched and play.
+-- Who wins or loses is based on the skills of the matched players.
+-- After each match, Elo and other stats are updated.
+-- Players are more likely to match if their rank is similar
+--    and they "joined" the queue at the same time.
+-- Each day I'm loading new data
+--    so it will become more and more accurate toward the end.
+-- ]]
+
+local info = "Simulation"
 
 function love.draw()
 

@@ -1,12 +1,6 @@
 local utils = require("utils")
 
-local json
-local jsonGPT = utils.want("GPTJson")
-if not jsonGPT then
-    json = require("dkjson")
-else
-    json = jsonGPT.use_lpeg()   -- should be a bit faster, but not publishing
-end
+local json = require("dkjson")   -- already the lpeg-based decoder (always_use_lpeg = true)
 
 local parameters = require("parameters")
 
@@ -104,7 +98,15 @@ PlayerDB.addPlayerFromData = function (item)
 end
 
 PlayerDB.loadOneLeaderboardFromData = function(dataFilePath)
-    local jsonText, e = love.filesystem.read(dataFilePath); if not jsonText then error(e) end
+    local jsonText
+    if love then
+        jsonText, e = love.filesystem.read(dataFilePath); if not jsonText then error(e) end
+    else
+        local file = io.open("./" .. dataFilePath, "r")
+        if not file then error("Could not open file: " .. dataFilePath) end
+        jsonText = file:read("*a")
+        file:close()
+    end
     local data = json.decode(jsonText); if not data then error("wrong json in ".. dataFilePath) end
     local LB_ID = data.leaderboardStats[next(data.leaderboardStats)].leaderboard_id
 

@@ -1,0 +1,26 @@
+AGE of ELO - leaderboard snapshot statistics
+Snapshot : LB_RM/LB_RM_2026-06-21.json  (leaderboard_id = 3)
+Generated: 2026-06-21 23:33:36
+
+Players  : 50352    Total Elo: 51488026
+
+Min / Max / Average
+Metric        |          min |          max |      average
+--------------+--------------+--------------+-------------
+Games         |           10 |        22815 |       749.62
+Winrate (%)   |         0.00 |       100.00 |        48.22
+Elo           |            0 |         2901 |      1022.56
+Drops         |            0 |         3185 |        16.43
+Streak        |          -82 |           61 |        -0.06
+
+Standard distribution  (readable, then Desmos formula)
+  Games       : average = 749.62, std = 1208.46
+                Desmos : normaldist(749.62,1208.46)
+  Winrate (%) : average = 48.22, std = 10.35
+                Desmos : normaldist(48.22,10.35)
+  Elo         : average = 1022.56, std = 362.96
+                Desmos : normaldist(1022.56,362.96)
+  Drops       : average = 16.43, std = 53.90
+                Desmos : normaldist(16.43,53.90)
+  Streak      : average = -0.06, std = 3.09
+                Desmos : normaldist(-0.06,3.09)

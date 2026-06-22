@@ -9,6 +9,16 @@ local Graphics = require("Graphics")
 
 local Game = {}
 
+-- ELO histogram bucketing (stats only, does not affect simulation)
+local ELO_BUCKET_WIDTH = 50
+local DEFAULT_ELO_BUCKETS = 60 -- 60 * 50 = 3000 max ELO before auto-expanding
+
+local function zeroBuckets(n)
+  local t = {}
+  for i = 1, n do t[i] = 0 end
+  return t
+end
+
 function Game.initialize()
 
   parameters.run = parameters.run + 1
@@ -27,7 +37,7 @@ function Game.initialize()
     step = 1,
     sessions = 0,
     totalGames = 0,
-    playersByELO50 = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} -- 0..50, 51..100, (...), 2400+
+    playersByELO50 = zeroBuckets(DEFAULT_ELO_BUCKETS) -- 0..50, 51..100, (...); auto-expands past 3000
   }
 
   Game.paused = false
@@ -72,14 +82,25 @@ end
 function Game.updateStats()
   local LB_ID = Game.LB_ID
   local index -- splitting by ELO
-  local elo = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0} -- 0..50, 51..100, (...), 2400+
+
+  -- Determine how many buckets are needed: default covers up to 3000 ELO,
+  -- but expand if a qualifying player is rated higher.
+  local numBuckets = DEFAULT_ELO_BUCKETS
+  for i = 1, #PlayerDB.LB[LB_ID] do
+    local p = PlayerDB.LB[LB_ID][i]
+    if p.LB[LB_ID].wins + p.LB[LB_ID].losses > 10 then
+      index = round(p.LB[LB_ID].rating / ELO_BUCKET_WIDTH)
+      if index > numBuckets then numBuckets = index end
+    end
+  end
+
+  local elo = zeroBuckets(numBuckets) -- 0..50, 51..100, (...)
 
   for i = 1, #PlayerDB.LB[LB_ID] do
     local p = PlayerDB.LB[LB_ID][i]
     if p.LB[LB_ID].wins + p.LB[LB_ID].losses > 10 then  -- display only 10+ games
-      index = round(p.LB[LB_ID].rating / 50)
-      if index > 50 then index = 50
-      elseif index < 1 then index = 1 end
+      index = round(p.LB[LB_ID].rating / ELO_BUCKET_WIDTH)
+      if index < 1 then index = 1 end
       elo[index] = elo[index] + 1
     end
   end

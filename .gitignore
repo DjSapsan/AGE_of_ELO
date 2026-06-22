@@ -2,3 +2,5 @@
 GPTJson.lua
 test*
 Predictions/*.csv
+.gitignore
+.claude/

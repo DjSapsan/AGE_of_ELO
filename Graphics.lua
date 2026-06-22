@@ -19,10 +19,15 @@ local function updateELOHistogramCanvas(canvas, t, LB_ID)
   love.graphics.setColor(0.5, 0.5, 1)
   local width, height = canvas:getDimensions()
 
-  -- Histogram parameters
-  local maxELO = 3100
-  local lineHeight = (height-20) / maxELO
+  -- Histogram parameters: default scale covers up to ~3000 ELO,
+  -- but expand if a higher-rated player is present.
   local totalPlayers = #t
+  local maxELO = 3100
+  for i = 1, totalPlayers do
+    local r = t[i].LB[LB_ID].rating
+    if r + 100 > maxELO then maxELO = r + 100 end
+  end
+  local lineHeight = (height-20) / maxELO
 
   -- Determine maximum number of bars based on canvas width (subtracted by margins)
   local maxBars = width - 40
@@ -82,38 +87,35 @@ local function updatePlayersHistogramCanvas(canvas, t)
   love.graphics.setBlendMode("alpha")
 
   local width, height = canvas:getDimensions()
-  local lineWidth = (width-40)/50 -- 50 bars
-  local thickness = lineWidth - 2
+  local buckets = Game.stat.playersByELO50
+  local numBuckets = #buckets
+  local lineWidth = (width-40)/numBuckets -- one bar per ELO bucket (auto-expands past 3000)
+  local thickness = math.max(1, lineWidth - 2)
 
   local max = 0
-  for i=1,50 do
-    if max < Game.stat.playersByELO50[i] then
-      max = Game.stat.playersByELO50[i]
+  for i=1,numBuckets do
+    if max < buckets[i] then
+      max = buckets[i]
     end
   end
+  if max == 0 then max = 1 end
 
   local lineHeight = (height-80)/max
   local amount = 0
   love.graphics.setColor(0.5,0.5,1) -- rectangle histogram
-  for i=1,50 do
-    amount = Game.stat.playersByELO50[i]
+  for i=1,numBuckets do
+    amount = buckets[i]
     love.graphics.rectangle("fill", i*lineWidth + 2 + 40, height-40, thickness, -amount*lineHeight)
   end
 
   love.graphics.setColor(1,1,1) -- rating
-  for i=0,49 do
+  for i=0,numBuckets-1 do
     love.graphics.print((i*50).."-", i*lineWidth+41, height-2, -1.57079633)
   end
 
-  -- TODO rework need correct numbers
-  -- local percentH = math.floor(#t/(max))
-  -- for i=1,50 do
-  --   love.graphics.print(i*percentH,0,height- i*(height-40)/50 - 45)
-  -- end
-
-  for i=1,50 do
-    if Game.stat.playersByELO50[i] > 0 then
-      love.graphics.print(Game.stat.playersByELO50[i], i*lineWidth+41, height-50, -1.57079633)
+  for i=1,numBuckets do
+    if buckets[i] > 0 then
+      love.graphics.print(buckets[i], i*lineWidth+41, height-50, -1.57079633)
     end
   end
 
